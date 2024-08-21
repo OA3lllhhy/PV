@@ -12,9 +12,13 @@ df_dark = pd.read_csv(dark)
 
 voltage = df['0A_Voltage']
 current = df['0A_Current']
+dark_voltage = df_dark['0A_Voltage']
+dark_current = df_dark['0A_Current']
 
 voltage = np.array(voltage)
 current = np.array(current)
+dark_voltage = np.array(dark_voltage)
+dark_current = np.array(dark_current)
 power = voltage*current
 
 def fit_func(x, a, b, c):
@@ -64,8 +68,8 @@ print("Fill factor: ", ff)
 
 # Plotting IV and PV curves on the same graph
 fig, ax = plt.subplots()
-ax.plot(voltage, -current, label='IV curve',)
-ax.plot(voltage, -current * voltage, label='PV curve')
+ax.semilogx(voltage, -current, label='IV curve',)
+ax.semilogx(voltage, -current * voltage, label='PV curve')
 #ax.plot(x, fit_func(x, *popt),color ='orange', label='Fitted IV curve')
 #ax.plot(x, fit_func(x, *popt) * x, color ='blue', label='Fitted PV curve') 
 ax.set_xlabel('Voltage (V)')
