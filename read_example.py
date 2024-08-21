@@ -34,6 +34,10 @@ if __name__ == '__main__':
         chan_b = dev.channels['B']
         chan_a.mode = Mode.HI_Z
         chan_b.mode = Mode.HI_Z
+        
+        chan_a.triangle(1, 0, 10, 0)
+        # chan_a.mode = Mode.HI_Z
+        # chan_b.mode = Mode.HI_Z
 
         while True:
             # Run the session for 1000 samples in noncontinuous mode and read
