@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from signal import signal, SIG_DFL, SIGINT
+from scipy.signal import savgol_filter
 import random
 import sys
 import time
@@ -61,10 +62,14 @@ if __name__ == '__main__':
         x = np.linspace(0, length, length)
         voltage_data = np.array(voltage_data)
         current_data = np.array(current_data)
-        # plt.plot(x, voltage_data)
-        # plt.plot(x, current_data)
-        plt.plot(voltage_data, - current_data, '.')
-        plt.plot(voltage_data, - current_data * voltage_data, '.')
+
+        # Apply a Savitzky-Golay filter to the data
+        # voltage_data = savgol_filter(voltage_data, 51, 3)
+        # current_data = savgol_filter(current_data, 51, 3)
+
+        if current_data is not None:
+            plt.plot(voltage_data, -current_data, '.')
+            plt.plot(voltage_data, - current_data * voltage_data, '.')
         plt.xlim(0, 0.6)
         plt.ylim(0, 0.03)
         plt.grid()
