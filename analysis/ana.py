@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.optimize import curve_fit
 
-path = 'quarter_shade_non_illuminated_1.csv'
+path = 'data/quarter_shade_non_illuminated_1.csv'
 df = pd.read_csv(path)
 
 def fit_func(x, k):

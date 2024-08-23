@@ -5,8 +5,8 @@ from scipy.optimize import curve_fit
 from scipy.optimize import minimize_scalar
 from scipy.optimize import fsolve
 
-path = 'quarter_shade_illuminated_1.csv'
-dark = 'quarter_shade_non_illuminated_1.csv'
+path = 'data/quarter_shade_illuminated_1.csv'
+dark = 'data/quarter_shade_non_illuminated_1.csv'
 df = pd.read_csv(path)
 df_dark = pd.read_csv(dark)
 

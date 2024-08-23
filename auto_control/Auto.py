@@ -65,6 +65,8 @@ if __name__ == '__main__':
         # plt.plot(x, current_data)
         plt.plot(voltage_data, - current_data, '.')
         plt.plot(voltage_data, - current_data * voltage_data, '.')
+        plt.xlim(0, 0.6)
+        plt.ylim(0, 0.03)
         plt.grid()
         plt.show()
 
