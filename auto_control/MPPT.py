@@ -39,7 +39,7 @@ if __name__ == '__main__':
         chan_a.mode = Mode.SVMI
         chan_b.mode = Mode.HI_Z
 
-        session.start(100)
+        session.start(1)
         print("Program running")
         for _ in range(500):
             try:
