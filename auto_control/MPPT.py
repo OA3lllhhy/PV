@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     session = Session()
 
-    voltage_step = 0.02
+    voltage_step = 0.005
     last_power = 0
     voltage = 0.5
 
@@ -29,6 +29,7 @@ if __name__ == '__main__':
     currents = []
     powers = []
     # powers = np.array(powers)
+    time_start = time.time()
 
     if session.devices:
         dev = session.devices[0]
@@ -39,11 +40,11 @@ if __name__ == '__main__':
         chan_b.mode = Mode.HI_Z
 
         session.start(100)
-        
-        for _ in range(100):
+        print("Program running")
+        for _ in range(500):
             try:
                 chan_a.constant(voltage)
-                session.read(0)
+                session.read(1)
                 # current = chan_a.current
                 # power = voltage * current
 
@@ -82,7 +83,46 @@ if __name__ == '__main__':
     for i in range(len(powers)):
         powers[i] = - powers[i]
 
-    plt.plot(voltages, powers, '.')
+
+    def power_curve(voltage, a, b, c):
+        return (a - b * np.exp(-c * voltage)) * voltage
+    
+    # Extract the data in the interval [0, 0.6]
+
+    voltage_fit = []
+    power_fit = []
+    for i in range(len(voltages)):
+        if voltages[i] > 0:
+            voltage_fit.append(voltages[i])
+            power_fit.append(powers[i])
+
+    params, covariance = curve_fit(power_curve, voltage_fit, power_fit, maxfev=10000)
+    errors = np.sqrt(np.diag(covariance))
+    print(f"Number of fitting data points: {len(voltage_fit)}")
+    print(f"Fitted parameters: a = {params[0]:.3f} +/- {errors[0]:.3f}")
+    print(f"Fitted parameters: b = {params[1]:.3f} +/- {errors[1]:.3f}")
+    print(f"Fitted parameters: c = {params[2]:.3f} +/- {errors[2]:.3f}")
+
+    def negative_power_curve(voltage):
+        return - power_curve(voltage, *params)
+    
+    result = minimize_scalar(negative_power_curve, bounds=(0, 0.6), method='bounded')
+    mpp_voltage = result.x
+    mpp_power = power_curve(mpp_voltage, *params)
+    print("Maximum Power Point: Voltage = {:.3f} V, Power = {:.3f} W".format(mpp_voltage, mpp_power))
+
+    time_end = time.time()
+    print("Execution time: {:.2f} s".format(time_end - time_start))
+
+    x = np.linspace(0, 0.6, 100)
+    plt.scatter(voltage_fit, power_fit, s = 10,label='Measured Power')
+    plt.plot(x, power_curve(x, *params), color = 'red',label='Fitted Power Curve')
+    plt.scatter([mpp_voltage], [mpp_power], color='yellow', s=100, label='MPP')
+    plt.title('Voltage-Power Curve')
+    plt.xlabel('Voltage (V)')
+    plt.ylabel('Power (W)')
+    plt.legend()
+    plt.grid(True)
     plt.xlim(0, 0.6)
     plt.ylim(0, 0.06)
     plt.show()
