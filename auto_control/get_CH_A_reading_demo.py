@@ -1,4 +1,8 @@
-from pysmu import *
+"""
+Demo of getting the reading of channel A
+"""
+
+from pysmu import Session, Mode
 import time
 
 session = Session()

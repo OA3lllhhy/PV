@@ -1,3 +1,9 @@
+"""
+This python script control the ADALM-1000 with triangle wave voltage input
+and measure the current output of the solar cell and hence plot the IV curve
+and PV curve of the cell. Also, calculates the V_oc, I_sc, V_mp, I_mp and
+fill factor of the cell.
+"""
 from __future__ import print_function
 from signal import signal, SIG_DFL, SIGINT
 from scipy.signal import savgol_filter
@@ -17,14 +23,11 @@ else:
     output = print
 
 if __name__ == '__main__':
-
     signal(SIGINT, SIG_DFL)
-
     session = Session()
 
     if session.devices:    
         dev = session.devices[0]
-    
         dev.ignore_dataflow = sys.stdout.isatty()
 
         chan_a = dev.channels['A']
@@ -32,44 +35,30 @@ if __name__ == '__main__':
 
         # set channel to source voltage, measure current mode
         chan_a.mode = Mode.SVMI
-        chan_b.mode = Mode.SVMI
+        chan_b.mode = Mode.HI_Z
 
-        # set channel to triangle wave with 1V amplitude, 0 offset, 10Hz frequency, 0 phase
-        chan_a.triangle(0.8, 0, 1000, 0)
-        chan_b.triangle(1, 0, 30, 0)
+        # set channel to triangle wave with 0.8V amplitude, 0 offset, 10Hz frequency, 0 phase
+        chan_a.triangle(0.8, 0, 10, 0)
 
         # start a continous session with 1000 samples store all the data in a dataframe
         start_time = time.time()
-        session.start(1000)
+        session.start(0)
         voltage_data = []
         current_data = []
-        count = 0
 
-        # Run the session in continuous mode for 2 seconds
+        # Run the session in continuous mode for 10 seconds
         while time.time() - start_time < 10:
-            samples = dev.get_samples(1000)
+            samples = dev.get_samples(1000) # get 1000 samples
             for x in samples:
                 voltage_data.append(x[0][0])
                 current_data.append(x[0][1])
-                count += 1
-                # output("{: 6f} {: 6f}".format(x[0][0], x[1][0]))
-
-        # stop the session
-        print("count: ", count)
-        # print(voltage_data)
-
-        # Plot the data
-        length = len(voltage_data)
-        x = np.linspace(0, length, length)
-        voltage_data = np.array(voltage_data)
-        current_data = np.array(current_data)
-
-        # Apply a Savitzky-Golay filter to the data
-        # voltage_data = savgol_filter(voltage_data, 51, 3)
-        # current_data = savgol_filter(current_data, 51, 3)
 
         if current_data is not None:
-
+            length = len(voltage_data)
+            x = np.linspace(0, length, length)
+            voltage_data = np.array(voltage_data)
+            current_data = np.array(current_data)
+            
             # Extract the data in the interval [0, 0.6]
             min = 0
             max = 0.6
@@ -83,7 +72,7 @@ if __name__ == '__main__':
             
             initial_guess = [0.1, 2e-11, 38]
             popt, pcov = curve_fit(fit_func, voltage_fit, -current_fit, p0=initial_guess)
-            print("a = ", popt[0], "b = ", popt[1], "c = ", popt[2])
+            # print("a = ", popt[0], "b = ", popt[1], "c = ", popt[2])
 
             # calculate the R^2 value
             residuals = -current_fit - fit_func(voltage_fit, *popt)
@@ -101,18 +90,18 @@ if __name__ == '__main__':
             def IV(x):
                 return fit_func(x, *popt)
             
-            I_sc = fit_func(0, *popt)
-            V_op = fsolve(IV, 0.55)
+            I_sc = fit_func(0, *popt) # short circuit current
+            V_op = fsolve(IV, 0.55) # open circuit voltage
 
-            print("V_op: ", V_op[0], "I_sc: ", I_sc, )
+            # print("V_op: ", V_op[0], "I_sc: ", I_sc, )
 
             result = minimize_scalar(negative_PV, bounds=(0,0.6))
             V_mp = result.x
             I_mp = fit_func(V_mp, *popt) * V_mp
-            print("V_mp: ", V_mp, "I_mp: ", I_mp)
+            # print("V_mp: ", V_mp, "I_mp: ", I_mp)
 
             ff = (V_mp * I_mp) / (I_sc * V_op[0])
-            print("Fill Factor: ", ff)
+            # print("Fill Factor: ", ff)
 
             fig, ax1 = plt.subplots()
             ax2 = ax1.twinx()
@@ -133,8 +122,6 @@ if __name__ == '__main__':
         plt.show()
 
         session.end()
-        
-        
             
     else:
         print('no devices attached')

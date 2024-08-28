@@ -1,3 +1,10 @@
+"""
+This python script analysis the data of pv cells from pixelpulse2
+and plots the IV curve and PV curve of the cell.
+
+Calculates the V_oc, I_sc, V_mp, I_mp and fill factor of the cell.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -45,7 +52,7 @@ print("R^2 = ", r_squared)
 
 x = np.linspace(0, 0.7, 100)
 
-# finding V_oc, I_sc, V_mp and I_mp (to shade the region on the graph)
+# finding V_oc, I_sc, V_mp and I_mp
 def negative_PV(x):
     return - fit_func(x, *popt) * x
 
@@ -68,16 +75,16 @@ print("Fill factor: ", ff)
 
 # Plotting IV and PV curves on the same graph
 fig, ax = plt.subplots()
-ax.semilogx(voltage, -current, label='IV curve',)
-ax.semilogx(voltage, -current * voltage, label='PV curve')
-#ax.plot(x, fit_func(x, *popt),color ='orange', label='Fitted IV curve')
-#ax.plot(x, fit_func(x, *popt) * x, color ='blue', label='Fitted PV curve') 
+ax.plot(voltage, -current, label='IV curve',)
+ax.plot(voltage, -current * voltage, label='PV curve')
+# ax.plot(x, fit_func(x, *popt),color ='orange', label='Fitted IV curve')
+# ax.plot(x, fit_func(x, *popt) * x, color ='blue', label='Fitted PV curve') 
 ax.set_xlabel('Voltage (V)')
 ax.set_ylabel('Current (A)')
 ax.set_title('IV Curve')
 ax.hlines(0, 0, 0.7, colors='black')
-ax.set_xlim(0, 0.7)
-ax.set_ylim(-0.05, 0.15)
+ax.set_xlim(0, 0.6)
+ax.set_ylim(0, 0.13)
 ax.grid()
 ax.legend()
 plt.show()
