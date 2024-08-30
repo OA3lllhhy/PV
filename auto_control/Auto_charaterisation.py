@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
         # Run the session in continuous mode for 10 seconds
         while time.time() - start_time < 1:
-            samples = dev.get_samples(100) # get 1000 samples
+            samples = dev.get_samples(1000) # get 1000 samples
             for x in samples:
                 voltage_data.append(x[0][0])
                 current_data.append(x[0][1])
