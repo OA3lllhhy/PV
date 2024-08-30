@@ -1,7 +1,6 @@
 """
 Demo of getting the reading of channel A
 """
-
 from pysmu import Session, Mode
 import time
 
@@ -16,13 +15,19 @@ devx = session.devices[0]
 # Set the channel A to source voltage with triangle input and measure current
 CHA = devx.channels['A']
 CHA.mode = Mode.SVMI
-CHA.triangle(0.1, 0.1, 0.1, 0)
-# CHA.current_limit(0.1)
+CHA.triangle(1, 0, 1, 0)
 
-# Run for 20 times and get the readings
-for i in range(20):
-    print(CHA.measure())
-    time.sleep(0.1)
+# Set the channel B to high impedance
+CHB = devx.channels['B']
+CHB.mode = Mode.HI_Z
+
+# Start the session
+session.start(0)
+
+# Get the reading of channel A
+samples = devx.get_samples(1)
+print(samples)
+
 
 # Close the session
 session.end()

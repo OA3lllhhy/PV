@@ -6,8 +6,6 @@ fill factor of the cell.
 """
 from __future__ import print_function
 from signal import signal, SIG_DFL, SIGINT
-from scipy.signal import savgol_filter
-import random
 import sys
 import time
 import matplotlib.pyplot as plt
@@ -25,7 +23,9 @@ else:
 if __name__ == '__main__':
     signal(SIGINT, SIG_DFL)
     session = Session()
-
+    voltage_data = []
+    current_data = []
+    start_time = time.time()
     if session.devices:    
         dev = session.devices[0]
         dev.ignore_dataflow = sys.stdout.isatty()
@@ -38,26 +38,32 @@ if __name__ == '__main__':
         chan_b.mode = Mode.HI_Z
 
         # set channel to triangle wave with 0.8V amplitude, 0 offset, 10Hz frequency, 0 phase
-        chan_a.triangle(0.8, 0, 10, 0)
+        chan_a.triangle(0.3, 0, 5, 0)
+        chan_b.constant(0)
 
         # start a continous session with 1000 samples store all the data in a dataframe
-        start_time = time.time()
+        # start_time = time.time()
         session.start(0)
-        voltage_data = []
-        current_data = []
+
+        '''
+        The problem is I cannot use the continuous mode to get the data for the IV curve
+        Still need to figure out how to get the data for the IV curve. I am sorry to left 
+        this problem to you, but I really cannot figure out how to solve this problem.
+        '''
 
         # Run the session in continuous mode for 10 seconds
-        while time.time() - start_time < 10:
-            samples = dev.get_samples(1000) # get 1000 samples
+        while time.time() - start_time < 1:
+            samples = dev.get_samples(100) # get 1000 samples
             for x in samples:
                 voltage_data.append(x[0][0])
                 current_data.append(x[0][1])
 
         if current_data is not None:
-            length = len(voltage_data)
-            x = np.linspace(0, length, length)
             voltage_data = np.array(voltage_data)
             current_data = np.array(current_data)
+            length = len(voltage_data)
+            print(length)
+            x = np.linspace(0, length, length)
             
             # Extract the data in the interval [0, 0.6]
             min = 0
@@ -71,15 +77,14 @@ if __name__ == '__main__':
                 return a - b * np.exp(c * x)
             
             initial_guess = [0.1, 2e-11, 38]
-            popt, pcov = curve_fit(fit_func, voltage_fit, -current_fit, p0=initial_guess)
-            # print("a = ", popt[0], "b = ", popt[1], "c = ", popt[2])
+            popt, pcov = curve_fit(fit_func, voltage_fit, -current_fit, p0=initial_guess, maxfev=1000000)
 
             # calculate the R^2 value
             residuals = -current_fit - fit_func(voltage_fit, *popt)
             ss_res = np.sum(residuals**2)
             ss_tot = np.sum((current_fit - np.mean(current_fit))**2)
             r_squared = 1 - (ss_res / ss_tot)
-            print("R^2 = ", r_squared)
+            # print("R^2 = ", r_squared)
 
             x = np.linspace(0, 0.7, 100)
 
@@ -107,21 +112,21 @@ if __name__ == '__main__':
             ax2 = ax1.twinx()
             ax1.plot(voltage_fit, -current_fit, '.', color = 'blue',label='IV curve')
             ax2.plot(voltage_fit, -current_fit * voltage_fit, '.', color = 'orange',label='PV curve')
-            # ax1.plot(x, fit_func(x, *popt), color = 'red')
-            # ax2.plot(x, fit_func(x, *popt) * x, color = 'green')
-        ax1.set_xlabel('Voltage (V)')
-        ax1.set_ylabel('Current (A)')
-        ax2.set_ylabel('Power (W)')
-        ax1.set_xlim(0, 0.6)
-        ax1.set_ylim(0, 0.15)
-        ax2.set_ylim(0, 0.15)
-        ax1.set_title('IV and PV curve')
-        ax1.grid(True)
-        ax1.legend(loc='upper right')
-        ax2.legend(loc='upper left')
-        plt.show()
+            ax1.plot(x, fit_func(x, *popt), color = 'red')
+            ax2.plot(x, fit_func(x, *popt) * x, color = 'green')
+            ax1.set_xlabel('Voltage (V)')
+            ax1.set_ylabel('Current (A)')
+            ax2.set_ylabel('Power (W)')
+            #ax1.set_xlim(0, 0.6)
+            #ax1.set_ylim(0, 0.15)
+            #ax2.set_ylim(0, 0.15)
+            ax1.set_title('IV and PV curve')
+            ax1.grid(True)
+            ax1.legend(loc='upper right')
+            ax2.legend(loc='upper left')
+            plt.show()
 
         session.end()
             
     else:
-        print('no devices attached')
+        print('no devices attached')  

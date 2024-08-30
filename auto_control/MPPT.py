@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     session = Session()
 
-    voltage_step = 0.005
+    voltage_step = 0.015
     last_power = 0
     voltage = 0.5
 
@@ -45,8 +45,6 @@ if __name__ == '__main__':
             try:
                 chan_a.constant(voltage)
                 session.read(1)
-                # current = chan_a.current
-                # power = voltage * current
 
                 samples = dev.get_samples(1)
                 for x in samples:
@@ -66,15 +64,10 @@ if __name__ == '__main__':
             except pysmu.exceptions.WriteTimeout as e:
                 print("Runtime error, retrying")
                 time.sleep(0.5)
-
+            
             time.sleep(0.1)
-
+        
         session.end()
-    # powers = np.array(powers)
-    # plt.plot(voltages, - powers, '.')
-    # plt.xlim(0, 0.6)
-    # plt.ylim(0, 0.1)
-    # plt.show()
 
     else:
         print("No device found")
@@ -96,7 +89,8 @@ if __name__ == '__main__':
             voltage_fit.append(voltages[i])
             power_fit.append(powers[i])
 
-    params, covariance = curve_fit(power_curve, voltage_fit, power_fit, maxfev=10000)
+    initial_guess = [3, 3, 0]
+    params, covariance = curve_fit(power_curve, voltage_fit, power_fit, p0=initial_guess, maxfev=10000)
     errors = np.sqrt(np.diag(covariance))
     print(f"Number of fitting data points: {len(voltage_fit)}")
     print(f"Fitted parameters: a = {params[0]:.3f} +/- {errors[0]:.3f}")
@@ -124,5 +118,5 @@ if __name__ == '__main__':
     plt.legend()
     plt.grid(True)
     plt.xlim(0, 0.6)
-    plt.ylim(0, 0.06)
+    plt.ylim(0, 0.015)
     plt.show()
